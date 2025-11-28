@@ -1,1 +1,780 @@
+-- SOURCE CODE - FurstyHub UI Framework
+-- Этот код можно использовать как основу для создания интерфейсов
 
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+-- Основной класс FurstyHub
+local FurstyHub = {}
+FurstyHub.__index = FurstyHub
+
+function FurstyHub.new(settings)
+    local self = setmetatable({}, FurstyHub)
+    
+    self.settings = settings or {
+        Name = "FurstyHub",
+        Author = "ByFursty",
+        MainColor = Color3.fromRGB(113, 13, 141),
+        BackgroundColor = Color3.fromRGB(106, 106, 106),
+        TabColor = Color3.fromRGB(43, 43, 43),
+        FunctionColor = Color3.fromRGB(57, 57, 57)
+    }
+    
+    self.tabs = {}
+    self.currentTab = nil
+    
+    self:CreateMainUI()
+    return self
+end
+
+function FurstyHub:CreateMainUI()
+    -- Создание основного GUI
+    self.screenGui = Instance.new("ScreenGui")
+    self.screenGui.Name = self.settings.Name
+    self.screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    self.screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+    -- Основное меню
+    self.mainMenu = Instance.new("Frame")
+    self.mainMenu.Name = "MainMenu"
+    self.mainMenu.Parent = self.screenGui
+    self.mainMenu.BackgroundColor3 = self.settings.BackgroundColor
+    self.mainMenu.BorderSizePixel = 0
+    self.mainMenu.Position = UDim2.new(0.343980342, 0, 0.256997466, 0)
+    self.mainMenu.Size = UDim2.new(0.307086617, 0, 0.486005098, 0)
+
+    -- Паттерн фона
+    local pattern = Instance.new("ImageLabel")
+    pattern.Name = "Pattern2"
+    pattern.Parent = self.mainMenu
+    pattern.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    pattern.BackgroundTransparency = 1.000
+    pattern.BorderColor3 = Color3.fromRGB(27, 42, 53)
+    pattern.Position = UDim2.new(-0.000985832186, 0, -0.00261780107, 0)
+    pattern.Size = UDim2.new(1, 0, 1, 0)
+    pattern.ZIndex = 9
+    pattern.Image = "rbxassetid://2151741365"
+    pattern.ImageTransparency = 0.600
+    pattern.ScaleType = Enum.ScaleType.Tile
+    pattern.SliceCenter = Rect.new(0, 256, 0, 256)
+    pattern.TileSize = UDim2.new(0, 250, 0, 250)
+
+    -- Панель вкладок
+    self.tabFunction = Instance.new("Frame")
+    self.tabFunction.Name = "MainTabFunction"
+    self.tabFunction.Parent = self.mainMenu
+    self.tabFunction.BackgroundColor3 = self.settings.TabColor
+    self.tabFunction.BorderSizePixel = 0
+    self.tabFunction.Position = UDim2.new(0.0591712371, 0, 0.062827222, 0)
+    self.tabFunction.Size = UDim2.new(0.895463526, 0, 0.112565443, 0)
+
+    local tabCorner = Instance.new("UICorner")
+    tabCorner.Parent = self.tabFunction
+
+    -- Логотип
+    self.logo = Instance.new("TextLabel")
+    self.logo.Name = "Logo"
+    self.logo.Parent = self.tabFunction
+    self.logo.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    self.logo.BackgroundTransparency = 1.000
+    self.logo.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    self.logo.BorderSizePixel = 0
+    self.logo.Position = UDim2.new(0.270925105, 0, 0, 0)
+    self.logo.Size = UDim2.new(0.440528631, 0, 0.860465109, 0)
+    self.logo.Font = Enum.Font.Michroma
+    self.logo.Text = self.settings.Name
+    self.logo.TextColor3 = Color3.fromRGB(255, 255, 255)
+    self.logo.TextScaled = true
+    self.logo.TextSize = 33.000
+    self.logo.TextWrapped = true
+
+    local textConstraint = Instance.new("UITextSizeConstraint")
+    textConstraint.Parent = self.logo
+    textConstraint.MaxTextSize = 33
+
+    -- Углы основного меню
+    local mainCorner = Instance.new("UICorner")
+    mainCorner.CornerRadius = UDim.new(0, 12)
+    mainCorner.Parent = self.mainMenu
+
+    -- Контейнер для кнопок вкладок
+    self.tabButtonsContainer = Instance.new("Frame")
+    self.tabButtonsContainer.Name = "TabButtons"
+    self.tabButtonsContainer.Parent = self.tabFunction
+    self.tabButtonsContainer.BackgroundTransparency = 1
+    self.tabButtonsContainer.Position = UDim2.new(0, 0, 0, 0)
+    self.tabButtonsContainer.Size = UDim2.new(1, 0, 1, 0)
+end
+
+function FurstyHub:AddTab(tabName, tabIcon, tabSettings)
+    local tab = {
+        name = tabName,
+        icon = tabIcon,
+        settings = tabSettings or {},
+        elements = {},
+        containers = {}
+    }
+    
+    -- Создание кнопки вкладки
+    local tabButton = Instance.new("ImageButton")
+    tabButton.Name = tabName
+    tabButton.Parent = self.tabButtonsContainer
+    tabButton.BackgroundTransparency = 1.000
+    tabButton.Size = UDim2.new(0, 40, 0, 40)
+    tabButton.Position = UDim2.new(#self.tabs * 0.15, 0, 0.1, 0)
+    tabButton.Image = tabIcon
+    tabButton.ScaleType = Enum.ScaleType.Fit
+    
+    -- Создание контейнера вкладки
+    local tabContainer = Instance.new("Frame")
+    tabContainer.Name = tabName
+    tabContainer.Parent = self.screenGui
+    tabContainer.BackgroundColor3 = self.settings.MainColor
+    tabContainer.BorderSizePixel = 0
+    tabContainer.Position = UDim2.new(0.343980342, 0, 0.357506365, 0)
+    tabContainer.Size = UDim2.new(0.307086617, 0, 0.385496169, 0)
+    tabContainer.Visible = false
+    
+    local tabCorner = Instance.new("UICorner")
+    tabCorner.CornerRadius = UDim.new(0, 12)
+    tabCorner.Parent = tabContainer
+    
+    -- Паттерн для вкладки
+    local tabPattern = Instance.new("ImageLabel")
+    tabPattern.Name = "Pattern2"
+    tabPattern.Parent = tabContainer
+    tabPattern.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    tabPattern.BackgroundTransparency = 1.000
+    tabPattern.BorderColor3 = Color3.fromRGB(27, 42, 53)
+    tabPattern.Position = UDim2.new(-0.000985832186, 0, -0.00261782692, 0)
+    tabPattern.Size = UDim2.new(1, 0, 1, 0)
+    tabPattern.ZIndex = 9
+    tabPattern.Image = "rbxassetid://2151741365"
+    tabPattern.ImageTransparency = 0.600
+    tabPattern.ScaleType = Enum.ScaleType.Tile
+    tabPattern.SliceCenter = Rect.new(0, 256, 0, 256)
+    tabPattern.TileSize = UDim2.new(0, 250, 0, 250)
+    
+    -- Основные контейнеры внутри вкладки
+    local functionContainer = Instance.new("Frame")
+    functionContainer.Name = "MainFunction"
+    functionContainer.Parent = tabContainer
+    functionContainer.BackgroundColor3 = self.settings.FunctionColor
+    functionContainer.BorderSizePixel = 0
+    functionContainer.Position = UDim2.new(0.0970089436, 0, 0.0462046191, 0)
+    functionContainer.Size = UDim2.new(0.333333343, 0, 0.904290438, 0)
+    
+    local functionCorner = Instance.new("UICorner")
+    functionCorner.Parent = functionContainer
+    
+    local settingsContainer = Instance.new("Frame")
+    settingsContainer.Name = "MainSettings"
+    settingsContainer.Parent = tabContainer
+    settingsContainer.BackgroundColor3 = self.settings.FunctionColor
+    settingsContainer.BorderSizePixel = 0
+    settingsContainer.Position = UDim2.new(0.572354078, 0, 0.0462046191, 0)
+    settingsContainer.Size = UDim2.new(0.345167667, 0, 0.904290438, 0)
+    
+    local settingsCorner = Instance.new("UICorner")
+    settingsCorner.Parent = settingsContainer
+    
+    tab.containers = {
+        main = tabContainer,
+        functionContainer = functionContainer,
+        settingsContainer = settingsContainer
+    }
+    
+    -- Обработчик клика по вкладке
+    tabButton.MouseButton1Click:Connect(function()
+        self:SwitchTab(tabName)
+    end)
+    
+    table.insert(self.tabs, tab)
+    
+    -- Если это первая вкладка, сделать ее активной
+    if #self.tabs == 1 then
+        self:SwitchTab(tabName)
+    end
+    
+    return tab
+end
+
+function FurstyHub:SwitchTab(tabName)
+    -- Скрыть все вкладки
+    for _, tab in ipairs(self.tabs) do
+        tab.containers.main.Visible = false
+    end
+    
+    -- Показать выбранную вкладку
+    for _, tab in ipairs(self.tabs) do
+        if tab.name == tabName then
+            tab.containers.main.Visible = true
+            self.currentTab = tab
+            
+            -- Вызвать callback если он есть
+            if tab.settings.onOpen then
+                tab.settings.onOpen()
+            end
+            break
+        end
+    end
+end
+
+-- Функции для создания элементов UI
+function FurstyHub:CreateModernToggle(parent, position, text, defaultState, callback)
+    local toggle = {}
+    
+    local ToggleFrame = Instance.new("Frame")
+    local ToggleButton = Instance.new("TextButton")
+    local ToggleLabel = Instance.new("TextLabel")
+    local ToggleCircle = Instance.new("Frame")
+    local UICornerToggle = Instance.new("UICorner")
+    local UICornerCircle = Instance.new("UICorner")
+    
+    ToggleFrame.Parent = parent
+    ToggleFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    ToggleFrame.BorderSizePixel = 0
+    ToggleFrame.Position = position
+    ToggleFrame.Size = UDim2.new(0.8, 0, 0.08, 0)
+    
+    UICornerToggle.CornerRadius = UDim.new(0, 8)
+    UICornerToggle.Parent = ToggleFrame
+    
+    ToggleLabel.Parent = ToggleFrame
+    ToggleLabel.BackgroundTransparency = 1
+    ToggleLabel.Position = UDim2.new(0.05, 0, 0, 0)
+    ToggleLabel.Size = UDim2.new(0.7, 0, 1, 0)
+    ToggleLabel.Font = Enum.Font.GothamSemibold
+    ToggleLabel.Text = text
+    ToggleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ToggleLabel.TextSize = 14
+    ToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    
+    ToggleButton.Parent = ToggleFrame
+    ToggleButton.BackgroundTransparency = 1
+    ToggleButton.Position = UDim2.new(0.7, 0, 0.15, 0)
+    ToggleButton.Size = UDim2.new(0.25, 0, 0.7, 0)
+    ToggleButton.Text = ""
+    
+    local ToggleBackground = Instance.new("Frame")
+    ToggleBackground.Parent = ToggleButton
+    ToggleBackground.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    ToggleBackground.BorderSizePixel = 0
+    ToggleBackground.Size = UDim2.new(1, 0, 1, 0)
+    
+    local UICornerBg = Instance.new("UICorner")
+    UICornerBg.CornerRadius = UDim.new(1, 0)
+    UICornerBg.Parent = ToggleBackground
+    
+    ToggleCircle.Parent = ToggleBackground
+    ToggleCircle.BackgroundColor3 = Color3.fromRGB(120, 120, 120)
+    ToggleCircle.BorderSizePixel = 0
+    ToggleCircle.Position = UDim2.new(0.05, 0, 0.05, 0)
+    ToggleCircle.Size = UDim2.new(0.4, 0, 0.9, 0)
+    
+    UICornerCircle.CornerRadius = UDim.new(1, 0)
+    UICornerCircle.Parent = ToggleCircle
+    
+    local state = defaultState or false
+    
+    local function UpdateToggle(instant)
+        local targetPosition
+        local targetBgColor
+        local targetCircleColor
+        
+        if state then
+            targetPosition = UDim2.new(0.55, 0, 0.05, 0)
+            targetBgColor = Color3.fromRGB(0, 170, 255)
+            targetCircleColor = Color3.fromRGB(255, 255, 255)
+        else
+            targetPosition = UDim2.new(0.05, 0, 0.05, 0)
+            targetBgColor = Color3.fromRGB(60, 60, 60)
+            targetCircleColor = Color3.fromRGB(120, 120, 120)
+        end
+        
+        if instant then
+            ToggleCircle.Position = targetPosition
+            ToggleBackground.BackgroundColor3 = targetBgColor
+            ToggleCircle.BackgroundColor3 = targetCircleColor
+        else
+            local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+            local positionTween = TweenService:Create(ToggleCircle, tweenInfo, {Position = targetPosition})
+            local bgTween = TweenService:Create(ToggleBackground, tweenInfo, {BackgroundColor3 = targetBgColor})
+            local circleTween = TweenService:Create(ToggleCircle, tweenInfo, {BackgroundColor3 = targetCircleColor})
+            
+            positionTween:Play()
+            bgTween:Play()
+            circleTween:Play()
+        end
+    end
+    
+    ToggleButton.MouseButton1Click:Connect(function()
+        state = not state
+        UpdateToggle(false)
+        if callback then
+            callback(state)
+        end
+    end)
+    
+    -- Эффекты при наведении
+    ToggleButton.MouseEnter:Connect(function()
+        local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+        local tween = TweenService:Create(ToggleBackground, tweenInfo, {BackgroundColor3 = Color3.fromRGB(80, 80, 80)})
+        tween:Play()
+    end)
+    
+    ToggleButton.MouseLeave:Connect(function()
+        local currentColor = state and Color3.fromRGB(0, 170, 255) or Color3.fromRGB(60, 60, 60)
+        local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+        local tween = TweenService:Create(ToggleBackground, tweenInfo, {BackgroundColor3 = currentColor})
+        tween:Play()
+    end)
+    
+    UpdateToggle(true)
+    
+    toggle.SetState = function(newState)
+        state = newState
+        UpdateToggle(false)
+    end
+    
+    toggle.GetState = function()
+        return state
+    end
+    
+    return toggle
+end
+
+function FurstyHub:CreateModernSlider(parent, position, text, minValue, maxValue, defaultValue, callback)
+    local slider = {}
+    
+    local SliderFrame = Instance.new("Frame")
+    local SliderLabel = Instance.new("TextLabel")
+    local SliderValue = Instance.new("TextLabel")
+    local SliderTrack = Instance.new("Frame")
+    local SliderFill = Instance.new("Frame")
+    local SliderButton = Instance.new("TextButton")
+    local UICornerSlider = Instance.new("UICorner")
+    local UICornerTrack = Instance.new("UICorner")
+    local UICornerFill = Instance.new("UICorner")
+    
+    SliderFrame.Parent = parent
+    SliderFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    SliderFrame.BorderSizePixel = 0
+    SliderFrame.Position = position
+    SliderFrame.Size = UDim2.new(0.8, 0, 0.1, 0)
+    
+    UICornerSlider.CornerRadius = UDim.new(0, 8)
+    UICornerSlider.Parent = SliderFrame
+    
+    SliderLabel.Parent = SliderFrame
+    SliderLabel.BackgroundTransparency = 1
+    SliderLabel.Position = UDim2.new(0.05, 0, 0, 0)
+    SliderLabel.Size = UDim2.new(0.6, 0, 0.4, 0)
+    SliderLabel.Font = Enum.Font.GothamSemibold
+    SliderLabel.Text = text
+    SliderLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SliderLabel.TextSize = 14
+    SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
+    
+    SliderValue.Parent = SliderFrame
+    SliderValue.BackgroundTransparency = 1
+    SliderValue.Position = UDim2.new(0.7, 0, 0, 0)
+    SliderValue.Size = UDim2.new(0.25, 0, 0.4, 0)
+    SliderValue.Font = Enum.Font.Gotham
+    SliderValue.Text = tostring(defaultValue or minValue)
+    SliderValue.TextColor3 = Color3.fromRGB(200, 200, 200)
+    SliderValue.TextSize = 12
+    
+    SliderTrack.Parent = SliderFrame
+    SliderTrack.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    SliderTrack.BorderSizePixel = 0
+    SliderTrack.Position = UDim2.new(0.05, 0, 0.5, 0)
+    SliderTrack.Size = UDim2.new(0.9, 0, 0.3, 0)
+    
+    UICornerTrack.CornerRadius = UDim.new(1, 0)
+    UICornerTrack.Parent = SliderTrack
+    
+    SliderFill.Parent = SliderTrack
+    SliderFill.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+    SliderFill.BorderSizePixel = 0
+    SliderFill.Size = UDim2.new((defaultValue or minValue - minValue) / (maxValue - minValue), 0, 1, 0)
+    
+    UICornerFill.CornerRadius = UDim.new(1, 0)
+    UICornerFill.Parent = SliderFill
+    
+    SliderButton.Parent = SliderTrack
+    SliderButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    SliderButton.BorderSizePixel = 0
+    SliderButton.Position = UDim2.new((defaultValue or minValue - minValue) / (maxValue - minValue), -8, 0, -4)
+    SliderButton.Size = UDim2.new(0, 16, 0, 16)
+    SliderButton.Text = ""
+    
+    local UICornerButton = Instance.new("UICorner")
+    UICornerButton.CornerRadius = UDim.new(1, 0)
+    UICornerButton.Parent = SliderButton
+    
+    local currentValue = defaultValue or minValue
+    local isDragging = false
+    
+    local function UpdateSlider(value, instant)
+        currentValue = math.clamp(value, minValue, maxValue)
+        local normalizedValue = (currentValue - minValue) / (maxValue - minValue)
+        
+        SliderValue.Text = tostring(math.floor(currentValue))
+        
+        local targetSize = UDim2.new(normalizedValue, 0, 1, 0)
+        local targetPosition = UDim2.new(normalizedValue, -8, 0, -4)
+        
+        if instant then
+            SliderFill.Size = targetSize
+            SliderButton.Position = targetPosition
+        else
+            local sizeTween = TweenService:Create(SliderFill, TweenInfo.new(0.1), {Size = targetSize})
+            local positionTween = TweenService:Create(SliderButton, TweenInfo.new(0.1), {Position = targetPosition})
+            sizeTween:Play()
+            positionTween:Play()
+        end
+        
+        if callback then
+            callback(currentValue)
+        end
+    end
+    
+    local function onInputChanged(input)
+        if isDragging then
+            local relativeX = (input.Position.X - SliderTrack.AbsolutePosition.X) / SliderTrack.AbsoluteSize.X
+            local value = minValue + (relativeX * (maxValue - minValue))
+            UpdateSlider(value, true)
+        end
+    end
+    
+    SliderButton.MouseButton1Down:Connect(function()
+        isDragging = true
+        local tween = TweenService:Create(SliderButton, TweenInfo.new(0.1), {Size = UDim2.new(0, 20, 0, 20)})
+        tween:Play()
+    end)
+    
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            if isDragging then
+                isDragging = false
+                local tween = TweenService:Create(SliderButton, TweenInfo.new(0.1), {Size = UDim2.new(0, 16, 0, 16)})
+                tween:Play()
+            end
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(onInputChanged)
+    
+    -- Эффекты при наведении
+    SliderButton.MouseEnter:Connect(function()
+        if not isDragging then
+            local tween = TweenService:Create(SliderButton, TweenInfo.new(0.1), {Size = UDim2.new(0, 18, 0, 18)})
+            tween:Play()
+        end
+    end)
+    
+    SliderButton.MouseLeave:Connect(function()
+        if not isDragging then
+            local tween = TweenService:Create(SliderButton, TweenInfo.new(0.1), {Size = UDim2.new(0, 16, 0, 16)})
+            tween:Play()
+        end
+    end)
+    
+    UpdateSlider(defaultValue or minValue, true)
+    
+    slider.GetValue = function()
+        return currentValue
+    end
+    
+    slider.SetValue = function(value)
+        UpdateSlider(value, false)
+    end
+    
+    return slider
+end
+
+function FurstyHub:CreateModernDropdown(parent, position, text, options, defaultOption, callback)
+    local dropdown = {}
+    
+    local DropdownFrame = Instance.new("Frame")
+    local DropdownButton = Instance.new("TextButton")
+    local DropdownLabel = Instance.new("TextLabel")
+    local DropdownIcon = Instance.new("TextLabel")
+    local OptionsFrame = Instance.new("ScrollingFrame")
+    local UICornerDropdown = Instance.new("UICorner")
+    local UICornerOptions = Instance.new("UICorner")
+    
+    DropdownFrame.Parent = parent
+    DropdownFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    DropdownFrame.BorderSizePixel = 0
+    DropdownFrame.Position = position
+    DropdownFrame.Size = UDim2.new(0.8, 0, 0.08, 0)
+    DropdownFrame.ClipsDescendants = true
+    
+    UICornerDropdown.CornerRadius = UDim.new(0, 8)
+    UICornerDropdown.Parent = DropdownFrame
+    
+    DropdownLabel.Parent = DropdownFrame
+    DropdownLabel.BackgroundTransparency = 1
+    DropdownLabel.Position = UDim2.new(0.05, 0, 0, 0)
+    DropdownLabel.Size = UDim2.new(0.6, 0, 1, 0)
+    DropdownLabel.Font = Enum.Font.GothamSemibold
+    DropdownLabel.Text = text
+    DropdownLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    DropdownLabel.TextSize = 14
+    DropdownLabel.TextXAlignment = Enum.TextXAlignment.Left
+    
+    DropdownButton.Parent = DropdownFrame
+    DropdownButton.BackgroundTransparency = 1
+    DropdownButton.Position = UDim2.new(0.65, 0, 0, 0)
+    DropdownButton.Size = UDim2.new(0.3, 0, 1, 0)
+    DropdownButton.Text = ""
+    
+    local SelectedText = Instance.new("TextLabel")
+    SelectedText.Parent = DropdownButton
+    SelectedText.BackgroundTransparency = 1
+    SelectedText.Size = UDim2.new(0.7, 0, 1, 0)
+    SelectedText.Font = Enum.Font.Gotham
+    SelectedText.Text = defaultOption or options[1]
+    SelectedText.TextColor3 = Color3.fromRGB(200, 200, 200)
+    SelectedText.TextSize = 12
+    
+    DropdownIcon.Parent = DropdownButton
+    DropdownIcon.BackgroundTransparency = 1
+    DropdownIcon.Position = UDim2.new(0.7, 0, 0, 0)
+    DropdownIcon.Size = UDim2.new(0.3, 0, 1, 0)
+    DropdownIcon.Font = Enum.Font.GothamBold
+    DropdownIcon.Text = "▼"
+    DropdownIcon.TextColor3 = Color3.fromRGB(200, 200, 200)
+    DropdownIcon.TextSize = 12
+    
+    OptionsFrame.Parent = DropdownFrame
+    OptionsFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    OptionsFrame.BorderSizePixel = 0
+    OptionsFrame.Position = UDim2.new(0, 0, 1, 5)
+    OptionsFrame.Size = UDim2.new(1, 0, 0, #options * 30)
+    OptionsFrame.CanvasSize = UDim2.new(0, 0, 0, #options * 30)
+    OptionsFrame.ScrollBarThickness = 3
+    OptionsFrame.Visible = false
+    
+    UICornerOptions.CornerRadius = UDim.new(0, 6)
+    UICornerOptions.Parent = OptionsFrame
+    
+    local isOpen = false
+    local selectedOption = defaultOption or options[1]
+    
+    local function UpdateOptions()
+        for i, option in ipairs(options) do
+            local OptionButton = Instance.new("TextButton")
+            OptionButton.Parent = OptionsFrame
+            OptionButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            OptionButton.BorderSizePixel = 0
+            OptionButton.Position = UDim2.new(0, 0, 0, (i-1)*30)
+            OptionButton.Size = UDim2.new(1, 0, 0, 30)
+            OptionButton.Font = Enum.Font.Gotham
+            OptionButton.Text = option
+            OptionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            OptionButton.TextSize = 12
+            
+            OptionButton.MouseEnter:Connect(function()
+                local tween = TweenService:Create(OptionButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(65, 65, 65)})
+                tween:Play()
+            end)
+            
+            OptionButton.MouseLeave:Connect(function()
+                local tween = TweenService:Create(OptionButton, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(50, 50, 50)})
+                tween:Play()
+            end)
+            
+            OptionButton.MouseButton1Click:Connect(function()
+                selectedOption = option
+                SelectedText.Text = option
+                
+                local tween = TweenService:Create(OptionsFrame, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, 0)})
+                tween:Play()
+                
+                wait(0.2)
+                OptionsFrame.Visible = false
+                isOpen = false
+                DropdownIcon.Text = "▼"
+                
+                if callback then
+                    callback(option)
+                end
+            end)
+        end
+    end
+    
+    DropdownButton.MouseButton1Click:Connect(function()
+        isOpen = not isOpen
+        
+        if isOpen then
+            OptionsFrame.Visible = true
+            OptionsFrame.Size = UDim2.new(1, 0, 0, 0)
+            DropdownIcon.Text = "▲"
+            
+            local tween = TweenService:Create(OptionsFrame, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, #options * 30)})
+            tween:Play()
+        else
+            local tween = TweenService:Create(OptionsFrame, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, 0)})
+            tween:Play()
+            
+            wait(0.2)
+            OptionsFrame.Visible = false
+            DropdownIcon.Text = "▼"
+        end
+    end)
+    
+    UpdateOptions()
+    
+    dropdown.GetSelected = function()
+        return selectedOption
+    end
+    
+    return dropdown
+end
+
+function FurstyHub:CreateModernColorPicker(parent, position, text, defaultColor, callback)
+    local colorPicker = {}
+    
+    local ColorFrame = Instance.new("Frame")
+    local ColorButton = Instance.new("TextButton")
+    local ColorLabel = Instance.new("TextLabel")
+    local ColorPreview = Instance.new("Frame")
+    local UICornerColor = Instance.new("UICorner")
+    local UICornerPreview = Instance.new("UICorner")
+    
+    ColorFrame.Parent = parent
+    ColorFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    ColorFrame.BorderSizePixel = 0
+    ColorFrame.Position = position
+    ColorFrame.Size = UDim2.new(0.8, 0, 0.1, 0)
+    
+    UICornerColor.CornerRadius = UDim.new(0, 8)
+    UICornerColor.Parent = ColorFrame
+    
+    ColorLabel.Parent = ColorFrame
+    ColorLabel.BackgroundTransparency = 1
+    ColorLabel.Position = UDim2.new(0.05, 0, 0, 0)
+    ColorLabel.Size = UDim2.new(0.6, 0, 1, 0)
+    ColorLabel.Font = Enum.Font.GothamSemibold
+    ColorLabel.Text = text
+    ColorLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ColorLabel.TextSize = 14
+    ColorLabel.TextXAlignment = Enum.TextXAlignment.Left
+    
+    ColorButton.Parent = ColorFrame
+    ColorButton.BackgroundTransparency = 1
+    ColorButton.Position = UDim2.new(0.65, 0, 0.1, 0)
+    ColorButton.Size = UDim2.new(0.3, 0, 0.8, 0)
+    ColorButton.Text = ""
+    
+    ColorPreview.Parent = ColorButton
+    ColorPreview.BackgroundColor3 = defaultColor or Color3.fromRGB(255, 0, 0)
+    ColorPreview.BorderSizePixel = 0
+    ColorPreview.Size = UDim2.new(1, 0, 1, 0)
+    
+    UICornerPreview.CornerRadius = UDim.new(0, 6)
+    UICornerPreview.Parent = ColorPreview
+    
+    local currentColor = defaultColor or Color3.fromRGB(255, 0, 0)
+    local colorPickerOpen = false
+    
+    ColorButton.MouseButton1Click:Connect(function()
+        if colorPickerOpen then return end
+        
+        colorPickerOpen = true
+        
+        local ColorPalette = Instance.new("Frame")
+        local UICornerPalette = Instance.new("UICorner")
+        
+        ColorPalette.Parent = parent
+        ColorPalette.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        ColorPalette.BorderSizePixel = 0
+        ColorPalette.Position = UDim2.new(position.X.Scale, position.X.Offset, position.Y.Scale + 0.12, position.Y.Offset)
+        ColorPalette.Size = UDim2.new(0.8, 0, 0, 120)
+        ColorPalette.ZIndex = 10
+        
+        UICornerPalette.CornerRadius = UDim.new(0, 8)
+        UICornerPalette.Parent = ColorPalette
+        
+        local colors = {
+            {Color3.fromRGB(255, 0, 0), "Red"},
+            {Color3.fromRGB(0, 255, 0), "Green"},
+            {Color3.fromRGB(0, 0, 255), "Blue"},
+            {Color3.fromRGB(255, 255, 0), "Yellow"},
+            {Color3.fromRGB(255, 0, 255), "Magenta"},
+            {Color3.fromRGB(0, 255, 255), "Cyan"},
+            {Color3.fromRGB(255, 165, 0), "Orange"},
+            {Color3.fromRGB(128, 0, 128), "Purple"}
+        }
+        
+        for i, colorData in ipairs(colors) do
+            local colorBtn = Instance.new("TextButton")
+            local UICornerBtn = Instance.new("UICorner")
+            
+            colorBtn.Parent = ColorPalette
+            colorBtn.BackgroundColor3 = colorData[1]
+            colorBtn.BorderSizePixel = 0
+            colorBtn.Position = UDim2.new(0.1 + ((i-1) % 4) * 0.2, 0, 0.1 + math.floor((i-1)/4) * 0.4, 0)
+            colorBtn.Size = UDim2.new(0.15, 0, 0.3, 0)
+            colorBtn.Text = ""
+            colorBtn.ZIndex = 11
+            
+            UICornerBtn.CornerRadius = UDim.new(0, 4)
+            UICornerBtn.Parent = colorBtn
+            
+            colorBtn.MouseButton1Click:Connect(function()
+                currentColor = colorData[1]
+                local tween = TweenService:Create(ColorPreview, TweenInfo.new(0.2), {BackgroundColor3 = currentColor})
+                tween:Play()
+                
+                local closeTween = TweenService:Create(ColorPalette, TweenInfo.new(0.2), {Size = UDim2.new(0.8, 0, 0, 0)})
+                closeTween:Play()
+                
+                wait(0.2)
+                ColorPalette:Destroy()
+                colorPickerOpen = false
+                
+                if callback then
+                    callback(currentColor)
+                end
+            end)
+        end
+        
+        local closeBtn = Instance.new("TextButton")
+        closeBtn.Parent = ColorPalette
+        closeBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+        closeBtn.BorderSizePixel = 0
+        closeBtn.Position = UDim2.new(0.7, 0, 0.7, 0)
+        closeBtn.Size = UDim2.new(0.2, 0, 0.2, 0)
+        closeBtn.Font = Enum.Font.Gotham
+        closeBtn.Text = "X"
+        closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        closeBtn.TextSize = 12
+        closeBtn.ZIndex = 11
+        
+        closeBtn.MouseButton1Click:Connect(function()
+            local tween = TweenService:Create(ColorPalette, TweenInfo.new(0.2), {Size = UDim2.new(0.8, 0, 0, 0)})
+            tween:Play()
+            
+            wait(0.2)
+            ColorPalette:Destroy()
+            colorPickerOpen = false
+        end)
+    end)
+    
+    colorPicker.GetColor = function()
+        return currentColor
+    end
+    
+    colorPicker.SetColor = function(newColor)
+        currentColor = newColor
+        ColorPreview.BackgroundColor3 = newColor
+    end
+    
+    return colorPicker
+end
+
+return FurstyHub
